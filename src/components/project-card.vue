@@ -1,30 +1,32 @@
 <template>
-  <div v-if="showPipelinesOnly ? (pipelines !== null && pipelines.length > 0) : true" :class="['project-card', status]">
-    <div class="content">
-      <div class="title small">{{ project !== null ? project.namespace.name : '...' }} /</div>
-      <div class="title">{{ project !== null ? project.name : 'Loading project...' }}</div>
-      <div class="branch">
-        <octicon name="git-branch" scale="0.9" />
-        {{ project !== null ? project.default_branch : '...' }}
-      </div>
-      <div class="pipeline-container">
-        <em v-if="pipelines !== null && pipelines.length === 0" class="no-pipelines">
-          No recent pipelines
-        </em>
-        <div v-else-if="pipelines !== null && pipelines.length > 0">
-          <div v-for="pipeline in pipelines">
-            <pipeline-view :pipeline="pipeline" :project="project" />
-          </div>
+  <div>
+    <div v-if="showPipelinesOnly ? (pipelines !== null && pipelines.length > 0) : true" :class="['project-card', status]">
+      <div class="content">
+        <div class="title small">{{ project !== null ? project.namespace.name : '...' }} /</div>
+        <div class="title">{{ project !== null ? project.name : 'Loading project...' }}</div>
+        <div class="branch">
+          <octicon name="git-branch" scale="0.9" />
+            {{ project !== null ? project.default_branch : '...' }}
         </div>
-        <octicon v-else name="sync" scale="1.4" spin />
+        <div class="pipeline-container">
+          <em v-if="pipelines !== null && pipelines.length === 0" class="no-pipelines">
+            No recent pipelines
+          </em>
+          <div v-else-if="pipelines !== null && pipelines.length > 0">
+            <div v-for="pipeline in pipelines" :key="pipeline.id">
+              <pipeline-view v-if="pipeline !== null" :pipeline="pipeline" :project="project" />
+            </div>
+          </div>
+          <octicon v-else name="sync" scale="1.4" spin />
+        </div>
       </div>
-    </div>
-    <div class="spacer"></div>
-    <div class="info">
       <div class="spacer"></div>
-      <gitlab-icon class="calendar-icon" name="calendar" size="12" />
-      <timeago v-if="project !== null" :since="project.last_activity_at" :auto-update="1"></timeago>
-      <time v-else>...</time>
+      <div class="info">
+        <div class="spacer"></div>
+        <gitlab-icon class="calendar-icon" name="calendar" size="12" />
+        <timeago v-if="project !== null" :since="project.last_activity_at" :auto-update="1"></timeago>
+        <time v-else>...</time>
+      </div>
     </div>
   </div>
 </template>
@@ -45,9 +47,10 @@
       Octicon
     },
     name: 'project-card',
-    props: ['project-id'],
+    props: ['project-id', 'branch-name'],
     data: () => ({
       project: null,
+      branches: [],
       pipelines: null,
       status: '',
       loading: false,
@@ -101,6 +104,7 @@
         this.$data.loading = true;
 
         this.$data.project = await this.$api(`/projects/${this.$props.projectId}`);
+        this.$data.branches = await this.$api(`/projects/${this.$props.projectId}/repository/branches`);
         this.$emit('input', this.$data.project.last_activity_at);
 
         this.$data.loading = false;
@@ -118,9 +122,9 @@
             const filteredPipelines = [];
 
             for (const pipeline of pipelines) {
-                if (pipeline.status == 'pending' || pipeline.status == 'running') {
-                    filteredPipelines.push(pipeline);
-                }
+              if (pipeline.ref === this.$props.branchName) {
+                  filteredPipelines.push(pipeline);
+              }
             }
 
             for (const pipeline of filteredPipelines) {

@@ -16,6 +16,13 @@
   import {getQueryParameter} from '../util';
   import ProjectCard         from './project-card';
 
+  const fetchCount = getQueryParameter('fetchCount') || 20;
+  const gitlabApiParams = {
+    order_by: 'last_activity_at',
+    // GitLab per_page max is 100. We use > 100 values as next page follow trigger
+    per_page: fetchCount > 100 ? 100 : fetchCount
+  };
+
   export default {
     components: {
       Octicon,
@@ -52,13 +59,6 @@
     },
     methods: {
       async fetchProjects() {
-        const fetchCount = getQueryParameter('fetchCount') || 20;
-        const gitlabApiParams = {
-          order_by: 'last_activity_at',
-          // GitLab per_page max is 100. We use > 100 values as next page follow trigger
-          per_page: fetchCount > 100 ? 100 : fetchCount
-        };
-
         const visibility = getQueryParameter('projectVisibility') || 'any';
         // Only add the visibility attribute to the params if filtering is required
         // (if visiblity is not specified, Gitlab will return all projects)
@@ -67,31 +67,41 @@
         }
 
         const projects = await this.$api('/projects', gitlabApiParams, {follow_next_page_links: fetchCount > 100});
-
         // Only show projects that have jobs enabled
-        const maxAge = (getQueryParameter('maxAge') !== null ? getQueryParameter('maxAge') : 24 * 7);
+        const maxAge = (getQueryParameter('maxAge') !== null ? getQueryParameter('maxAge') : 24 * 90);
 
         // Only include projects from specific groups
-        let includeGroups = (getQueryParameter('groups') !== null ? getQueryParameter('groups') : '');
+        let includeGroups = (getQueryParameter('groups') !== null ? getQueryParameter('groups') : null);
         if (typeof includeGroups === 'string') {
           includeGroups = includeGroups.split(',');
         }
 
         // Only include specific projects
-        let includeProjects = (getQueryParameter('projects') !== null ? getQueryParameter('projects') : '');
+        let includeProjects = (getQueryParameter('projects') !== null ? getQueryParameter('projects') : null);
         if (typeof includeProjects === 'string') {
           includeProjects = includeProjects.split(',');
         }
 
-        this.$data.projects = projects.filter((project) => {
-          return project.jobs_enabled &&
-            (maxAge === 0 || ((new Date() - new Date(project.last_activity_at)) / 1000 / 60 / 60 <= maxAge)) &&
-            (
-              (includeGroups[0] === '' && includeProjects[0] === '') ||
-              (includeGroups.some((group) => group === project.namespace.name)) ||
-              (includeProjects.some((group) => group === project.name_with_namespace))
-            );
-        });
+        this.$data.projects = projects
+          .filter(project => {
+            return (maxAge === 0 || ((new Date() - new Date(project.last_activity_at)) / 1000 / 60 / 60 <= maxAge))
+          })
+          .filter(project => {
+            if (!includeGroups) {
+              return project
+            }
+            return includeGroups.some(group => {
+              return group.toLowerCase() === project.namespace.path
+            })
+          })
+          .filter(project => {
+            if (!includeProjects) {
+              return project
+            }
+            return includeProjects.some(proj => {
+              return proj.toLowerCase() === project.path
+            })
+          })
 
         if (getQueryParameter('autoZoom')) {
           this.$nextTick(() => this.autoZoom());
@@ -124,6 +134,9 @@
       }
     }
   };
+
+  
+
 </script>
 
 <style lang="scss">

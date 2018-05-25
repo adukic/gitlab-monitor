@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="project-card-wrapper">
     <branch-card v-for="branch in branches" :key="branch.id" :branch="branch" :pipelines="pipelines" :project="project" />
   </div>
 </template>
@@ -58,6 +58,10 @@
 </script>
 
 <style lang="scss" scoped>
+.project-card-wrapper {
+  display: flex;
+  
+}
 .project-card {
     margin: 4px;
     border-radius: 3px;

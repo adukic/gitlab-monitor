@@ -167,11 +167,6 @@
 
 <style lang="scss" scoped>
   .app {
-    .projects {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: left;
-    }
 
     .loader {
       display: flex;

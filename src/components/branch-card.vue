@@ -1,5 +1,4 @@
 <template>
-  <div>
     <div v-if="showPipelinesOnly ? (pipelines !== null && pipelines.length > 0 && branchPipelines !== null && branchPipelines.length > 0) : true" :class="['branch-card', status]">
       <div class="content">
         <div class="title small">{{ project !== null ? project.namespace.name : '...' }} /</div>
@@ -28,7 +27,6 @@
         <time v-else>...</time>
       </div>
     </div>
-  </div>
 </template>
 
 <script>

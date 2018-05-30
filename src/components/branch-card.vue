@@ -23,7 +23,7 @@
       <div class="info">
         <div class="spacer"></div>
         <gitlab-icon class="calendar-icon" name="calendar" size="12" />
-        <timeago v-if="project !== null" :since="project.last_activity_at" :auto-update="1"></timeago>
+        <timeago v-if="updatedAt !== null" :since="updatedAt" :auto-update="1"></timeago>
         <time v-else>...</time>
       </div>
     </div>
@@ -49,6 +49,7 @@
     data: () => ({
       branchPipelines: [],
       status: '',
+      updatedAt: null,
       loading: false,
       refreshInterval: null
     }),
@@ -73,18 +74,19 @@
       branchPipelines(branchPipelines) {
         if (this.$data.branchPipelines && this.$data.branchPipelines.length > 0) {
           this.$data.status = this.$data.branchPipelines[0].status;
+          this.$data.updatedAt = this.$data.branchPipelines[0].updated_at;
           
           switch (this.$data.branchPipelines[0].status) {
             case 'pending':
             case 'running':
-              this.$data.refreshInterval = 60000;
+              this.$data.refreshInterval = 90000;
               break;
             default:
-              this.$data.refreshInterval = 90000;
+              this.$data.refreshInterval = 120000;
           }
         } else {
           this.$data.status = '';
-          this.$data.refreshInterval = 180000;
+          this.$data.refreshInterval = 240000;
         }
       },
       refreshInterval(newInterval, oldInterval) {

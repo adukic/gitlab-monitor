@@ -77,14 +77,14 @@
           switch (this.$data.branchPipelines[0].status) {
             case 'pending':
             case 'running':
-              this.$data.refreshInterval = 10000;
+              this.$data.refreshInterval = 60000;
               break;
             default:
-              this.$data.refreshInterval = 30000;
+              this.$data.refreshInterval = 90000;
           }
         } else {
           this.$data.status = '';
-          this.$data.refreshInterval = 120000;
+          this.$data.refreshInterval = 180000;
         }
       },
       refreshInterval(newInterval, oldInterval) {

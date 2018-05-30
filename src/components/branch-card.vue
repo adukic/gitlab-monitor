@@ -13,7 +13,7 @@
           </em>
           <div v-else-if="pipelines !== null && pipelines.length > 0">
             <div v-for="pipeline in branchPipelines" :key="pipeline.id">
-              <pipeline-view :pipeline="pipeline" :project="project" />
+              <pipeline-view :pipeline="pipeline" :branch="branch" :project="project" />
             </div>
           </div>
           <octicon v-else name="sync" scale="1.4" spin />
@@ -47,7 +47,7 @@
     name: 'branch-card',
     props: ['branch', 'pipelines', 'project'],
     data: () => ({
-      branchPipelines: null,
+      branchPipelines: [],
       status: '',
       loading: false,
       refreshInterval: null
@@ -73,18 +73,18 @@
       branchPipelines(branchPipelines) {
         if (this.$data.branchPipelines && this.$data.branchPipelines.length > 0) {
           this.$data.status = this.$data.branchPipelines[0].status;
-
+          
           switch (this.$data.branchPipelines[0].status) {
             case 'pending':
             case 'running':
-              this.$data.refreshInterval = 5000;
+              this.$data.refreshInterval = 10000;
               break;
             default:
-              this.$data.refreshInterval = 15000;
+              this.$data.refreshInterval = 30000;
           }
         } else {
           this.$data.status = '';
-          this.$data.refreshInterval = 60000;
+          this.$data.refreshInterval = 120000;
         }
       },
       refreshInterval(newInterval, oldInterval) {

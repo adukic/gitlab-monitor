@@ -29,7 +29,7 @@
       JobView
     },
     name: 'pipeline-view',
-    props: ['pipeline', 'project'],
+    props: ['pipeline', 'branch','project'],
     data: () => ({
       jobs: [],
       loading: true,
@@ -86,7 +86,20 @@
     },
     methods: {
       async fetchJobs() {
-        this.$data.jobs = await this.$api(`/projects/${this.$props.project.id}/repository/commits/${this.$props.pipeline.sha}/statuses`);
+        this.$data.loading = true;
+
+        const allJobs = await this.$api(`/projects/${this.$props.project.id}/repository/commits/${this.$props.pipeline.sha}/statuses`);
+        
+        const branchJobs = [];
+        if(allJobs != null && allJobs.length > 0) {
+          for (const job of allJobs) {
+            if (job.ref === this.$props.branch.name) {
+              branchJobs.push(job);
+            }
+          }
+        }
+        this.$data.jobs = branchJobs;
+        
         this.$data.loading = false;
       },
       setupDurationCounter() {
